@@ -56,7 +56,7 @@ class Cafe(db.Model):
             "has_sockets": self.has_sockets,
             "can_take_calls": self.can_take_calls,
             "coffee_price": self.coffee_price
-            
+
         }
 
 with app.app_context():
@@ -119,12 +119,47 @@ def get_cafe_choice():
 #     return jsonify(cafes=[cafe.to_dict() for cafe in all_cafes])
 
 def get_all_cafes():
-    result = db.session.execute(db.select(Cafe).order_by(Cafe.name))
+    result = db.session.execute(db.select(Cafe).order_by(Cafe.id))
     all_cafes = result.scalars().all()
     #This uses a List Comprehension but you could also split it into 3 lines.
     return jsonify(cafes=[cafe.to_dict() for cafe in all_cafes])
 
+
+@app.route("/search")
+def search_cafes():
+    location = request.args.get("loc")
+
+    result = db.session.execute(db.select(Cafe).where(Cafe.location == location))
+    all_cafes = result.scalars().all()
+
+    if all_cafes:
+        return jsonify(cafes=[cafe.to_dict() for cafe in all_cafes])
+    else:
+        return jsonify(error={"Not found": "Not found"})
+
+
+
 # HTTP POST - Create Record
+
+@app.route("/add" , methods=["GET","POST"])
+def add_cafe():
+    new_cafe = Cafe(
+        name=request.form.get("name"),
+        map_url=request.form.get("map_url"),
+        img_url=request.form.get("img_url"),
+        location=request.form.get("loc"),
+        has_sockets=bool(request.form.get("sockets")),
+        has_toilet=bool(request.form.get("toilet")),
+        has_wifi=bool(request.form.get("wifi")),
+        can_take_calls=bool(request.form.get("calls")),
+        seats=request.form.get("seats"),
+        coffee_price=request.form.get("coffee_price")
+
+    )
+
+    db.session.add(new_cafe)
+    db.session.commit()
+    return jsonify(response = {"success": "True"})
 
 # HTTP PUT/PATCH - Update Record
 
