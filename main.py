@@ -1,4 +1,3 @@
-
 from flask import Flask, jsonify, render_template, request
 from markupsafe import escape
 
@@ -6,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Boolean
 import random
+
 '''
 Install the required packages first: 
 Open the Terminal in PyCharm (bottom left). 
@@ -21,9 +21,11 @@ This will install the packages from requirements.txt for this project.
 
 app = Flask(__name__)
 
+
 # CREATE DB
 class Base(DeclarativeBase):
     pass
+
 
 # Connect to Database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cafes.db'
@@ -60,6 +62,7 @@ class Cafe(db.Model):
             "coffee_price": self.coffee_price
 
         }
+
 
 with app.app_context():
     db.create_all()
@@ -98,6 +101,7 @@ def get_cafe_choice():
         }
     )
 
+
 @app.route("/all")
 # def get_all_cafes():
 #     result = db.session.execute(db.select(Cafe).order_by(Cafe.name))
@@ -123,7 +127,7 @@ def get_cafe_choice():
 def get_all_cafes():
     result = db.session.execute(db.select(Cafe).order_by(Cafe.id))
     all_cafes = result.scalars().all()
-    #This uses a List Comprehension but you could also split it into 3 lines.
+    # This uses a List Comprehension but you could also split it into 3 lines.
     return jsonify(cafes=[cafe.to_dict() for cafe in all_cafes])
 
 
@@ -140,10 +144,9 @@ def search_cafes():
         return jsonify(error={"Not found": "Not found"})
 
 
-
 # HTTP POST - Create Record
 
-@app.route("/add" , methods=["GET","POST"])
+@app.route("/add", methods=["GET", "POST"])
 def add_cafe():
     new_cafe = Cafe(
         name=request.form.get("name"),
@@ -161,26 +164,48 @@ def add_cafe():
 
     db.session.add(new_cafe)
     db.session.commit()
-    return jsonify(response = {"success": "True"})
+    return jsonify(response={"success": "True"})
+
 
 # HTTP PUT/PATCH - Update Record
 
 @app.route("/update-price/<int:cafe_id>", methods=["PATCH"])
 def update_price(cafe_id):
     new_price = request.args.get("new_price")
+
     # result = db.session.execute(db.select(Cafe).where(Cafe.id == cafe_id))
+
     cafe = db.session.get(Cafe, cafe_id)
 
     if cafe:
         cafe.coffee_price = new_price
+
         db.session.commit()
-        return jsonify(response = {"success": "True"})
+        return jsonify(response={"success": "True"})
     else:
         return jsonify(response={"not Completed": "Failed"})
 
 
+@app.route("/report-closed/<int:cafe_id>", methods=["DELETE"])
+def delete_cafe(cafe_id):
+
+    cafe_to_delete = db.session.get(Cafe, cafe_id)
+    api_key = request.args.get("api_key")
+
+    if api_key == "TopSecretAPIKey":
+        if cafe_to_delete:
+
+            db.session.delete(cafe_to_delete)
+            db.session.commit()
+
+            return jsonify(respone = {"cafe_to_delete": f"{cafe_id} Deleted"})
+
+        else:
+            return jsonify(respone={"Cafe not Founds": f"{cafe_id} not Found"})
+    
+    else:
+        return jsonify(respone={"Api KEY": f"Incorrect entry"})
+
 # HTTP DELETE - Delete Record
-
-
 if __name__ == '__main__':
     app.run(debug=True)
