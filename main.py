@@ -1,5 +1,7 @@
-import choice
+
 from flask import Flask, jsonify, render_template, request
+from markupsafe import escape
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Boolean
@@ -162,6 +164,20 @@ def add_cafe():
     return jsonify(response = {"success": "True"})
 
 # HTTP PUT/PATCH - Update Record
+
+@app.route("/update-price/<int:cafe_id>", methods=["PATCH"])
+def update_price(cafe_id):
+    new_price = request.args.get("new_price")
+    # result = db.session.execute(db.select(Cafe).where(Cafe.id == cafe_id))
+    cafe = db.session.get(Cafe, cafe_id)
+
+    if cafe:
+        cafe.coffee_price = new_price
+        db.session.commit()
+        return jsonify(response = {"success": "True"})
+    else:
+        return jsonify(response={"not Completed": "Failed"})
+
 
 # HTTP DELETE - Delete Record
 
