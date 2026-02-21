@@ -202,7 +202,7 @@ def delete_cafe(cafe_id):
 
         else:
             return jsonify(respone={"Cafe not Founds": f"{cafe_id} not Found"})
-    
+
     else:
         return jsonify(respone={"Api KEY": f"Incorrect entry"})
 
